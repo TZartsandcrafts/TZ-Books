@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>书录 BookMemo</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1c2b4a">
+<title>书录 BookMemo</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1c2b4a"><meta name="apple-mobile-web-app-title" content="书录"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--navy:#1c2b4a;--navy2:#3a5288;--navyl:#dfe6f3;--wine:#7b1e34;--wine2:#b0405a;--winel:#f3dde2;--bg:#f7f2f3;--card:#fff;--tx:#1d1a1c;--mut:#6b6468;--ln:#e4dadd;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--navy:#8fa6d6;--navy2:#a9bbe3;--navyl:#22304f;--wine:#d9738a;--wine2:#e595a8;--winel:#4a2530;--bg:#141215;--card:#201c22;--tx:#f0e9ec;--mut:#a89fa4;--ln:#382f36}}
@@ -36,7 +36,7 @@ function all(s){return new Promise(r=>{if(!db)return r(mem[s].slice());const q=d
 function put(s,o){return new Promise(r=>{if(!db){if(!o.id)o.id=mem.n++;mem[s]=mem[s].filter(x=>x.id!==o.id).concat([o]);return r(o)}const q=db.transaction(s,"readwrite").objectStore(s).put(o);q.onsuccess=()=>{o.id=q.result;r(o)};q.onerror=()=>r(o)})}
 function del(s,id){return new Promise(r=>{if(!db){mem[s]=mem[s].filter(x=>x.id!==id);return r()}const q=db.transaction(s,"readwrite").objectStore(s).delete(id);q.onsuccess=q.onerror=()=>r()})}
 async function load(){A=await all("authors");B=await all("books")}
-const VER="0.6.7";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
+const VER="0.6.8";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
 try{Object.assign(S,JSON.parse(localStorage.getItem("bookmemo_s")||"{}"))}catch(e){}
 const saveS=()=>{try{localStorage.setItem("bookmemo_s",JSON.stringify(S))}catch(e){}};
 const today=()=>new Date().toISOString().slice(0,10);
