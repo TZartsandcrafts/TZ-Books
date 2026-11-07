@@ -27,7 +27,7 @@ nav button{flex:1;border:0;background:none;font-family:inherit;font-size:16px;co
 .hint{font-size:16px;color:var(--mut);margin:0 0 14px}.gear{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:14px;z-index:9;width:46px;height:46px;border-radius:23px;border:1px solid var(--ln);background:var(--card);color:var(--navy);font-size:24px}.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--wine);color:#fff;font-size:13px;line-height:20px;vertical-align:top;margin-left:2px}.star{color:var(--wine2);letter-spacing:2px}#app h1{padding-right:56px}#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--wine);color:#fff;padding:12px 20px;border-radius:24px;font-size:18px;opacity:0;transition:opacity .2s;z-index:20;pointer-events:none;max-width:90%;text-align:center}
 .hb #app h1{padding-left:54px}
 .card.bc{display:flex;gap:14px;align-items:flex-start}.bi{flex:1;min-width:0}
-.cov{flex:none;aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:var(--navyl);color:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--ln)}.cov img{width:100%;height:100%;object-fit:cover;display:block}
+.cov{flex:none;aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:var(--navyl);color:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--ln)}.cov img{width:100%;height:100%;object-fit:contain;display:block}.cov.ld{aspect-ratio:auto;background:none;border-color:transparent}.cov.ld img{height:auto}.bc .cov.ld img{max-height:150px}
 .bc .cov{width:68px}
 .cvw{position:relative;width:44%;max-width:170px;margin:4px auto 18px}.cvw .cov{width:100%;font-size:44px}
 .cbadge{position:absolute;right:-10px;bottom:-10px;width:46px;height:46px;border-radius:23px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:21px;margin:0;border:2px solid var(--bg)}
@@ -51,7 +51,7 @@ isRef:s=>!!s&&String(s).indexOf("photo:")===0};
 const pcache={};
 async function saveCover(data){const id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);await PH.put(id,data);pcache[id]=data;return "photo:"+id}
 function delCover(ref){if(PH.isRef(ref)){const id=ref.slice(6);delete pcache[id];PH.del(id)}}
-function coverImg(ref){if(!ref)return "";if(PH.isRef(ref)){const id=ref.slice(6);return pcache[id]?`<img alt="" src="${esc(pcache[id])}">`:`<img alt="" data-pref="${esc(ref)}">`}return `<img alt="" src="${esc(ref)}">`}
+function coverImg(ref){if(!ref)return "";if(PH.isRef(ref)){const id=ref.slice(6);return pcache[id]?`<img alt="" onload="this.parentNode.classList.add('ld')" src="${esc(pcache[id])}">`:`<img alt="" onload="this.parentNode.classList.add('ld')" data-pref="${esc(ref)}">`}return `<img alt="" onload="this.parentNode.classList.add('ld')" src="${esc(ref)}">`}
 function hydrate(){document.querySelectorAll("img[data-pref]").forEach(img=>{const id=img.dataset.pref.slice(6);if(pcache[id]){img.src=pcache[id];img.removeAttribute("data-pref");return}PH.get(id).then(d=>{if(d){pcache[id]=d;img.src=d;img.removeAttribute("data-pref")}})})}
 function shrink(file,maxDim,q){return new Promise((ok,no)=>{const fr=new FileReader();fr.onload=e=>{const im=new Image();im.onload=()=>{const k=Math.min(1,maxDim/Math.max(im.width,im.height)),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k)),c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);ok(c.toDataURL("image/jpeg",q))};im.onerror=()=>no(new Error("decode"));im.src=e.target.result};fr.onerror=()=>no(new Error("read"));fr.readAsDataURL(file)})}
 async function prepCover(file){let m=900,q=.72,d=await shrink(file,m,q),n=0;while(d.length>180*1024&&n<5){m=Math.round(m*.8);q=Math.max(.4,q-.1);d=await shrink(file,m,q);n++}return d.length>260*1024?null:d}
@@ -59,7 +59,7 @@ const inlineCovers=l=>Promise.all(l.map(async b=>{if(!PH.isRef(b.cover))return b
 async function migrateCover(b){const c=b.cover||"";if(c.indexOf("data:")===0)return {...b,cover:await saveCover(c)};if(PH.isRef(c))return {...b,cover:""};return b}
 function dropCover(r){if(r.d&&r.d.cover&&r.d.cover!==r.orig)delCover(r.d.cover)}
 function stageOld(r,old){if(!old)return;if(old===r.orig)r.del.push(old);else delCover(old)}
-const VER="0.8.0";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
+const VER="0.8.1";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
 try{Object.assign(S,JSON.parse(localStorage.getItem("bookmemo_s")||"{}"))}catch(e){}
 if(S.sort==="作品数")S.sort="实体书数";
 const saveS=()=>{try{localStorage.setItem("bookmemo_s",JSON.stringify(S))}catch(e){}};
