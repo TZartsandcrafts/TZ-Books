@@ -51,6 +51,14 @@ nav button{flex:1;border:0;background:none;font-family:inherit;font-size:16px;co
 .tag.sm{font-size:12px;padding:1px 7px;margin:0 0 0 8px;vertical-align:middle;white-space:nowrap}
 .card.hot{background:var(--hot);border-left:6px solid var(--wine2)}.card.hot .tag.w{background:var(--wine);color:var(--hotx)}
 .frz{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;display:flow-root;background:var(--bg);margin:0 -18px;padding:0 18px 2px}.frz::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:env(safe-area-inset-top,0px);background:var(--bg)}.frz.off,.fza.off,.fzb.off{position:static}.fza,.fzb{background:var(--bg);margin:0 -18px;padding:0 18px;display:flow-root}.fza{position:sticky;top:env(safe-area-inset-top,0px);z-index:8}.fza::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:env(safe-area-inset-top,0px);background:var(--bg)}.fzb{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--ah,60px));z-index:7;padding-bottom:2px}.fza h1{margin:2px 0 10px}.fzb h2{margin:8px 0 8px}.frz h1{margin:2px 0 10px}.frz h2{margin:8px 0 8px}.frz .card{margin-bottom:10px}
+.sbar.sf{display:flex;gap:8px;align-items:center;padding-right:18px}.sbar.sf input{flex:1;min-width:0}.fbtn{flex:none;padding:12px 16px;border-radius:12px;border:1.5px solid var(--ln);background:var(--card);color:var(--navy);font:inherit;font-size:18px}.fbtn.on{background:var(--wine);border-color:var(--wine);color:var(--hotx,#fff)}
+.fsum{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:15px;color:var(--mut);padding:2px 2px 8px}.fsum a{flex:none;color:var(--wine);padding:4px 8px}
+.dov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;touch-action:none}.dov.on{opacity:1;pointer-events:auto}
+.drw{position:fixed;top:0;bottom:0;left:0;width:min(84vw,350px);background:var(--card);z-index:41;transform:translateX(-104%);transition:transform .22s;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);box-shadow:4px 0 24px rgba(0,0,0,.25)}.drw.on{transform:none}
+.dhd{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 6px}.dhd b{font-size:24px;color:var(--navy)}.dhd a{padding:6px 10px;font-size:24px;color:var(--mut)}
+.dbody{flex:1;overflow:auto;padding:4px 18px 14px;-webkit-overflow-scrolling:touch}.dbody h3{font-size:17px;color:var(--wine);margin:18px 0 8px}.dopts{display:flex;flex-wrap:wrap;gap:8px}
+.dopt{font:inherit;font-size:17px;padding:8px 14px;border-radius:12px;border:1.5px solid var(--ln);background:var(--card);color:var(--tx)}.dopt.on{background:var(--navy);border-color:var(--navy);color:var(--card)}
+.dfoot{display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--ln)}.dfoot .btn{margin:0;flex:1;padding:14px 8px;font-size:18px}
 </style></head><body><div id="app"></div>
 <div id="toast"></div><input type="file" id="imp" accept=".json,application/json" style="display:none"><button class="gear" data-go="settings">⚙</button><button class="gear" id="bk" data-act="cno" style="right:auto;left:14px;display:none">‹</button><nav id="nav"></nav>
 <script>
@@ -78,7 +86,7 @@ const inlineCovers=l=>Promise.all(l.map(async b=>{if(!PH.isRef(b.cover))return b
 async function migrateCover(b){const c=b.cover||"";if(c.indexOf("data:")===0)return {...b,cover:await saveCover(c)};if(PH.isRef(c))return {...b,cover:""};return b}
 function dropCover(r){if(r.d&&r.d.cover&&r.d.cover!==r.orig)delCover(r.d.cover)}
 function stageOld(r,old){if(!old)return;if(old===r.orig)r.del.push(old);else delCover(old)}
-const VER="0.19.1";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
+const VER="0.20.0";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
 try{Object.assign(S,JSON.parse(localStorage.getItem("bookmemo_s")||"{}"))}catch(e){}
 if(S.sort==="作品数")S.sort="实体书数";
 const saveS=()=>{try{localStorage.setItem("bookmemo_s",JSON.stringify(S))}catch(e){}};
@@ -99,7 +107,7 @@ for(const n of names){const res=await fetch(`https://www.googleapis.com/books/v1
 r.items=out.sort((x,y)=>y.date.localeCompare(x.date))}catch(e){r.items=out;r.err="Google Books 查询失败（"+e.message+"）。若为 HTTP 429/403，请在设置里填 Google Books API Key；网络不通时可能需要代理。"}
 r.stat=`Google Books 返回 ${g.raw} 条；作者不符丢弃 ${g.na.length}${g.na.length?"："+g.na.slice(0,10).join("、"):""}；重复合并 ${g.dup.length}${g.dup.length?"："+g.dup.slice(0,10).join("、"):""}；台湾国图 ${out.filter(x=>x.src).length} 条`;if(twErr)r.err=(r.err||"")+" 台湾国图查询失败："+twErr;if(cur()===r)render()}
 let stack=[{p:"home"}];const cur=()=>stack[stack.length-1];
-function go(r){if(r.p==="settings"&&cur().p==="settings")return;stack.push(r);render()}function back(){if(stack.length>1){const r=cur();if(r.p==="scan")stopScan();if(r.p==="edit")dropCover(r);stack.pop();render()}}
+function go(r){if(r.p==="settings"&&cur().p==="settings")return;stack.push(r);render()}function back(){if(cur().dr){setDr(cur(),0);return}if(stack.length>1){const r=cur();if(r.p==="scan")stopScan();if(r.p==="edit")dropCover(r);stack.pop();render()}}
 function tab(p){if(cur().p==="scan")stopScan();if(cur().p==="edit")dropCover(cur());if(p==="home")stack=[{p:"home"}];else if(cur().p!==p)stack.push({p});render()}
 const au=id=>A.find(a=>a.id===id)||{name:"未知作者"};
 const normArr=v=>(Array.isArray(v)?v:String(v||"").split(/[、,，]/)).map(x=>String(x).trim()).filter(Boolean);
@@ -144,15 +152,15 @@ const rows=L.map(a=>{const ab=B.filter(b=>b.authorId===a.id),self=hit(q,[a.name,
 const tk=q.toLowerCase().split(/\s+/),via=q&&!self?ab.find(b=>tk.some(w=>(b.title||"").toLowerCase().includes(w)||(b.workTitle||"").toLowerCase().includes(w))):null;
 return `<a class="card" data-go="author" data-id="${a.id}"><b>${esc(dn(a))}</b> <span class="star">${"★".repeat(a.fav||0)}</span><div class="mut">${esc(pensOf(a).join("、")||"无笔名")}</div><div class="mut">${ab.length} 本实体书 · 已购 ${ab.filter(b=>b.purchased==="已购").length}</div>${via?`<div class="mut">含《${esc(via.title)}》</div>`:""}</a>`}).join("");
 return rows||`<p class="mut">${q?"没有找到「"+esc(q)+"」":"暂无"}</p>`}
-if(r.p==="genre"){const f=r.f||"全部",gk=r.g,L=B.filter(b=>(!r.au||b.authorId===r.au)&&(gk==="*"||(b.genre||"未分类")===gk)&&(f==="全部"||b.purchased===f||b.script===f||(f==="已出版"&&!pend(b))||(f==="待出版"&&pend(b)))&&bookHit(b,q));
-return entries(sortBooks(L,f),1)||`<p class="mut">${q?"没有找到「"+esc(q)+"」":"暂无"}</p>`}
+if(r.p==="genre"){const fl=r.fl||(r.fl=initFl(r)),L=genreRows(r);
+return entries(sortBooks(L,flSortKey(fl)),1)||`<p class="mut">${q?"没有找到「"+esc(q)+"」":"暂无"}</p>`}
 if(r.p==="books"){if(q){const L=sortBooks(B.filter(b=>bookHit(b,q)),"全部");return `<p class="hint" style="margin:0 0 10px">找到 ${L.length} 本</p>`+(entries(L,1)||`<p class="mut">没有找到「${esc(q)}」</p>`)}
 const v=r.v||"cat",pl=B.filter(pend),seg=`<div class="chips"><button class="chip ${v==="cat"?"on":""}" data-k="bv" data-v="cat">按种类</button><button class="chip ${v==="pending"?"on":""}" data-k="bv" data-v="pending">待出版 ${pl.length}</button></div>`;
 if(v==="pending")return seg+`<a class="btn wine" data-go="pick" data-st="已宣布">＋ 添加待出版</a>`+(entries(sortBooks(pl,"待出版"),1)||`<p class="hint">暂无待出版的书。</p>`);
 const g={};B.forEach(b=>{const k=b.genre||"未分类";(g[k]=g[k]||[]).push(b)});
 return seg+`<a class="btn wine" data-go="pick">＋ 添加图书</a><a class="card" data-go="genre" data-g="*"><b>全部书目</b><div class="mut">${B.length} 本</div></a>`+Object.keys(g).sort((x,y)=>g[y].length-g[x].length).map(k=>`<a class="card" data-go="genre" data-g="${esc(k)}"><b>${esc(k)}</b><div class="mut">${g[k].length} 本 · 已购 ${g[k].filter(b=>b.purchased==="已购").length}</div></a>`).join("")}
 return ""}
-function liveSearch(v){const r=cur();r.q=v;const el=document.getElementById("lst");if(el){el.innerHTML=listHtml(r);hydrate()}}
+function liveSearch(v){const r=cur();r.q=v;const el=document.getElementById("lst");if(el){el.innerHTML=listHtml(r);hydrate()}const s=document.getElementById("fsum");if(s&&r.fl)s.innerHTML=fsumHtml(r)}
 const owned=x=>x.purchased==="已购"||x.purchased==="预订中";
 const dupOwned=b=>(b.purchased||"未购")==="未购"&&sibs(b).some(owned);
 const CUR={"人民币":"¥","新台币":"NT$"};
@@ -173,7 +181,7 @@ if(r.p==="home"){const pub=B.filter(b=>!pend(b));h=`<h1 style="margin-bottom:2px
 if(r.p==="authors"){h=`<div class="frz"><h1>作者</h1>${sbar(r,"搜索作者、笔名、书名…")}<a class="btn wine" data-go="authorEdit">＋ 添加作者</a>`+chips("s_sort",["字母","实体书数","喜欢度"],S.sort)+`</div><div id="lst">${listHtml(r)}</div>`}
 if(r.p==="author"){const a=au(r.id),bs=sortBooks(B.filter(b=>b.authorId===r.id),"全部"),rows=[["本名",esc(a.name)],["笔名 / 网名",esc(pensOf(a).join("、"))],["喜欢程度",a.fav?`<span class="star">${"★".repeat(a.fav)}</span>`:""],["购买提醒",esc(a.remind)],["备注",esc(a.note)]].filter(x=>x[1]).map(([k,v])=>`<div class="row"><span>${k}</span><span>${v}</span></div>`).join("");h=`<div class="fza"><h1>${esc(dn(a))}</h1></div>${rows?`<div class="card">${rows}</div>`:""}<div class="fzb"><div class="brow"><a class="btn wine" data-go="edit" data-aid="${a.id}">添加书籍</a><a class="btn ghost" data-go="authorEdit" data-id="${a.id}">编辑作者</a></div><div class="brow"><a class="btn" data-go="lookup" data-id="${a.id}">自动查找</a><a class="btn ghost" data-go="search" data-q="${esc(dn(a))}">手动检索</a></div><h2>实体书（${bs.length}）</h2></div>`+(entries(bs,0,1)||`<p class="mut">暂无实体书，可点上方「自动查找」或「添加书籍」</p>`)}
 if(r.p==="books"){h=`<h1>书目</h1>${sbar(r,"搜索书名、作者、出版社、ISBN…")}<div id="lst">${listHtml(r)}</div>`}
-if(r.p==="genre"){const f=r.f||"全部",gk=r.g;h=`<div class="frz"><h1>${r.au?esc(dn(au(r.au)))+" 的书"+(gk==="*"?"":" · "+esc(gk)):gk==="*"?"全部书目":esc(gk)}</h1>${sbar(r,"搜索书名、作者、出版社、ISBN…")}`+chips("bf",["全部","未购","预订中","已购","简体","繁体","已出版","待出版"],f)+`<p class="hint" style="margin:0 0 10px">${sortHint(f)}</p></div><div id="lst">${listHtml(r)}</div>`}
+if(r.p==="genre"){r.fl=r.fl||initFl(r);h=`<div class="frz"><h1 id="gt">${genreTitle(r)}</h1>${sbarF(r,"搜索书名、作者、出版社、ISBN…")}<div id="fsum">${fsumHtml(r)}</div></div><div id="lst">${listHtml(r)}</div>`+drawerHtml(r)}
 if(r.p==="set"){h=setPage(r)}
 if(r.p==="lookup"){if(!r.started){r.started=1;doLookup(r).catch(e=>{r.items=[];r.err="查找出错："+e.message;if(cur()===r)render()})}const n=(r.items||[]).filter(x=>!x.added).length;h=`<h1>查找：${esc(dn(au(r.id)))}</h1>`+(r.err?`<p class="hint">${esc(r.err)}</p>`:"")+(r.items?(n?`<a class="btn wine" data-act="addAll">全部加入书目（${n}）</a>`:"")+(r.items.map((x,i)=>`<a class="card" data-act="addL" data-i="${i}"><b>${esc(x.title)}</b><div class="mut">${esc([x.publisher||"出版社未知",x.date,x.isbn].filter(Boolean).join(" · "))}</div><span class="tag">${x.script}</span>${x.src?`<span class="tag">${x.src}</span>`:""}<span class="tag w">${x.added?"已在书目":x.status}</span></a>`).join("")||(r.err?"":`<p class="hint">没有找到结果，可去各站检索，或手动添加。</p>`)):`<p class="hint">查找中…</p>`)+`<p class="hint">${esc(r.stat||"")}</p><p class="hint">数据来自 Google Books 与台湾国图（繁体、预计出版），出版社与版次可能不全；未出版的作品无法自动获取，请手动添加。</p>`}
 if(r.p==="confirm"){h=`<h1>${esc(r.msg)}</h1><a class="btn wine" data-act="cyes">确定</a><a class="btn ghost" data-act="cno">取消</a>`}
@@ -192,6 +200,23 @@ document.getElementById("bk").style.display=stack.length>1?"":"none";document.bo
 {const c=cur();if(c!==lastR)scrollTo(0,c.sy||0);else scrollTo(0,y0);lastR=c}}
 function csvOut(){const c=["作者,书名,网络作品,文学种类,简繁,出版社,ISBN,版次印次,出版日期,状态,预计出版,购买状态,购买时间,渠道,购买价格,购买币种,定价,定价币种,链接,提醒强度"];B.forEach(b=>c.push([dn(au(b.authorId)),b.title,b.workTitle,b.genre,b.script,b.publisher,b.isbn,[edT(b,"ed"),edT(b,"pr")].filter(Boolean).join(" / ")||b.edition,b.date,b.status,b.expected,b.purchased,b.purchaseDate,b.channel,b.price,b.currency,b.listPrice,b.listCurrency,b.url,b.level].map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")));return"\ufeff"+c.join("\n")}
 function dl(name,txt,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click()}
+/* ===== v0.20.0 侧边栏筛选（书目列表页）：多维度条件可叠加，同一维度内多选为「或」 ===== */
+const FL_DIMS=[["pur","购买状态"],["scr","简繁体"],["pub","出版状态"],["genre","文学种类"],["lvl","提醒强度（本书）"]];
+const FL_NAME=(k,v)=>k==="lvl"&&v==="跟随"?"跟随设置":v;
+function flOpts(){return{pur:["未购","预订中","已购"],scr:["简体","繁体"],pub:["已出版","待出版"],genre:[...genreNames(),...(B.some(b=>!(b.genre||"").trim())?["未分类"]:[])],lvl:["强","中","轻","跟随"]}}
+function flEmpty(){return{pur:[],scr:[],pub:[],genre:[],lvl:[]}}
+function initFl(r){const fl=flEmpty(),f=r.f;if(["未购","预订中","已购"].includes(f))fl.pur=[f];else if(f==="简体"||f==="繁体")fl.scr=[f];else if(f==="已出版"||f==="待出版")fl.pub=[f];if(r.g&&r.g!=="*")fl.genre=[r.g];return fl}
+const flN=fl=>Object.values(fl).reduce((n,a)=>n+a.length,0);
+const flSortKey=fl=>fl.pur.length===1?fl.pur[0]:fl.pub.length===1?fl.pub[0]:"全部";
+const flOk=(b,fl)=>(!fl.pur.length||fl.pur.includes(b.purchased||"未购"))&&(!fl.scr.length||fl.scr.includes(b.script||"简体"))&&(!fl.pub.length||fl.pub.includes(pend(b)?"待出版":"已出版"))&&(!fl.genre.length||fl.genre.includes((b.genre||"").trim()||"未分类"))&&(!fl.lvl.length||fl.lvl.includes(LV[b.level]?b.level:"跟随"));
+const genreRows=r=>{const q=(r.q||"").trim(),fl=r.fl||(r.fl=initFl(r));return B.filter(b=>(!r.au||b.authorId===r.au)&&flOk(b,fl)&&bookHit(b,q))};
+function genreTitle(r){const fl=r.fl,g=fl.genre.length===1?esc(fl.genre[0]):"";return r.au?esc(dn(au(r.au)))+" 的书"+(g?" · "+g:""):g||"全部书目"}
+const sbarF=(r,ph)=>`<div class="sbar sf"><input id="sq" type="search" enterkeyhint="search" autocomplete="off" placeholder="${esc(ph)}" value="${esc(r.q||"")}"><button type="button" id="fbtn" class="fbtn${flN(r.fl)?" on":""}" data-act="dro">筛选${flN(r.fl)?"（"+flN(r.fl)+"）":""}</button></div>`;
+function fsumHtml(r){const fl=r.fl;if(!flN(fl))return "";const t=FL_DIMS.map(([k])=>fl[k].map(v=>FL_NAME(k,v)).join("、")).filter(Boolean).join(" · ");return `<div class="fsum"><span>共 ${genreRows(r).length} 本 · ${esc(t)}</span><a data-act="dclr">清除</a></div>`}
+function drawerInner(r){const fl=r.fl,O=flOpts(),n=genreRows(r).length;return `<div class="dhd"><b>筛选</b><a data-act="drx">✕</a></div><div class="dbody">${FL_DIMS.map(([k,t])=>O[k].length?`<h3>${t}</h3><div class="dopts">${O[k].map(v=>`<button type="button" class="dopt${fl[k].includes(v)?" on":""}" data-act="dtg" data-dim="${k}" data-v="${esc(v)}">${esc(FL_NAME(k,v))}</button>`).join("")}</div>`:"").join("")}<p class="hint" style="margin-top:18px">${sortHint(flSortKey(fl))}</p></div><div class="dfoot"><a class="btn gw" data-act="dclr">清除全部</a><a class="btn wine" data-act="drx">查看 ${n} 本</a></div>`}
+const drawerHtml=r=>`<div class="dov${r.dr?" on":""}" data-act="drx"></div><aside class="drw${r.dr?" on":""}">${drawerInner(r)}</aside>`;
+function setDr(r,on){r.dr=on?1:0;const o=document.querySelector(".dov"),d=document.querySelector(".drw");if(o)o.classList.toggle("on",!!on);if(d)d.classList.toggle("on",!!on)}
+function refreshFl(r){const l=document.getElementById("lst");if(l){l.innerHTML=listHtml(r);hydrate()}const s=document.getElementById("fsum");if(s)s.innerHTML=fsumHtml(r);const t=document.getElementById("gt");if(t)t.innerHTML=genreTitle(r);const b=document.getElementById("fbtn");if(b){b.className="fbtn"+(flN(r.fl)?" on":"");b.textContent="筛选"+(flN(r.fl)?"（"+flN(r.fl)+"）":"")}const d=document.querySelector(".drw");if(d){const y=(d.querySelector(".dbody")||{}).scrollTop||0;d.innerHTML=drawerInner(r);const nb=d.querySelector(".dbody");if(nb)nb.scrollTop=y}fitFrz()}
 /* ===== v0.12.0 扫码添加：条码识别 + 按 ISBN 查询并填表 ===== */
 let SC=null,zxP=null;
 const isbnDig=s=>String(s||"").replace(/[^0-9Xx]/g,"").toUpperCase();
@@ -279,6 +304,10 @@ if(d.add){r.d[d.add].push("");render();const q=document.querySelectorAll('[data-
 if(d.rm){const[k,i]=d.rm.split(":");r.d[k].splice(+i,1);return render()}
 if(d.go){const n={p:d.go};if(d.id)n.id=+d.id;if(d.aid)n.aid=+d.aid;if(d.flt)n.f=d.flt;if(d.g!==undefined)n.g=d.g;if(d.st)n.st=d.st;if(d.view)n.v=d.view;if(d.sk)n.sk=decodeURIComponent(d.sk);if(d.q!==undefined)n.q=d.q;return go(n)}
 if(t.classList.contains("chip")){if(d.k.startsWith("s_")){S[d.k.slice(2)]=d.v;saveS();return render()}if(d.k==="bf"){r.f=d.v;return render()}if(d.k==="bv"){r.v=d.v;return render()}if(r.d){r.d[d.k]=d.v;return render()}return}
+if(d.act==="dro"){setDr(r,1);return}
+if(d.act==="drx"){setDr(r,0);return}
+if(d.act==="dtg"){const a=r.fl[d.dim],i=a.indexOf(d.v);if(i<0)a.push(d.v);else a.splice(i,1);refreshFl(r);return}
+if(d.act==="dclr"){r.fl=flEmpty();refreshFl(r);return}
 if(d.act==="cmb"){const l=t.parentNode.querySelector(".cmbl"),on=l.classList.contains("on");document.querySelectorAll(".cmbl.on").forEach(x=>x.classList.remove("on"));if(!on)l.classList.add("on");return}
 if(d.act==="cmbp"){r.d[d.k]=d.v;render();return}
 if(d.act==="cal"){const k=d.k;if(r.cal&&r.cal.k===k){const c=r.cal;if(c.t&&!c.mo){const v=String(r.d[k]||""),ym=c.y+"-"+String(c.m).padStart(2,"0");if(!(/^\d{4}-\d{2}-\d{2}$/.test(v)&&v.slice(0,7)===ym))r.d[k]=ym}r.cal=null}else{const m=String(r.d[k]||"").match(/^(\d{4})-(\d{2})/),n=new Date();r.cal={k,y:m?+m[1]:n.getFullYear(),m:m?+m[2]:n.getMonth()+1,mo:d.mo?1:0}}render();return}
@@ -318,7 +347,7 @@ document.getElementById("imp").addEventListener("change",async e=>{const f=e.tar
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("sw register failed",e)))}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!e.target.closest("input,textarea"))back()});
 let sx=0,sy=0,sk=1;document.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;sk=!e.target.closest("input,textarea,select")},{passive:true});
-document.addEventListener("touchend",e=>{const t=e.changedTouches[0];if(sk&&t.clientX-sx>90&&Math.abs(t.clientY-sy)<60)back()},{passive:true});
+document.addEventListener("touchend",e=>{const t=e.changedTouches[0],r=cur();if(r.dr){if(sx-t.clientX>70&&Math.abs(t.clientY-sy)<60)setDr(r,0);return}if(sk&&t.clientX-sx>90&&Math.abs(t.clientY-sy)<60)back()},{passive:true});
 /* 长按（电脑端右键）书籍条目 → 弹出「复制此条目」，点击后以该条目的全部内容打开编辑页，保存即为新条目 */
 const pop=document.createElement("div");pop.id="pop";pop.innerHTML='<button data-act="copyb">复制此条目</button>';document.body.appendChild(pop);
 let lpTimer=null,lpId=null,lpFired=false,lpX=0,lpY=0;
