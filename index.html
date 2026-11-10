@@ -77,7 +77,7 @@ const inlineCovers=l=>Promise.all(l.map(async b=>{if(!PH.isRef(b.cover))return b
 async function migrateCover(b){const c=b.cover||"";if(c.indexOf("data:")===0)return {...b,cover:await saveCover(c)};if(PH.isRef(c))return {...b,cover:""};return b}
 function dropCover(r){if(r.d&&r.d.cover&&r.d.cover!==r.orig)delCover(r.d.cover)}
 function stageOld(r,old){if(!old)return;if(old===r.orig)r.del.push(old);else delCover(old)}
-const VER="0.18.0";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
+const VER="0.18.1";let S={worker:"https://bookmemo.taizaibook.workers.dev",sort:"字母",remind:"开",level:"中",scope:"全部",last:""};
 try{Object.assign(S,JSON.parse(localStorage.getItem("bookmemo_s")||"{}"))}catch(e){}
 if(S.sort==="作品数")S.sort="实体书数";
 const saveS=()=>{try{localStorage.setItem("bookmemo_s",JSON.stringify(S))}catch(e){}};
@@ -257,15 +257,15 @@ catch(x){if(st)st.textContent="识别失败："+x.message}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&SC){stopScan();const st=document.getElementById("scst");if(st)st.textContent="相机已暂停，点「重新开启相机」继续"}});
 /* ===== v0.15.0 自定义日历 / 下拉输入框 / 金额两位小数 ===== */
 function fmtD(v){v=String(v||"");let m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return m[1]+"年"+(+m[2])+"月"+(+m[3])+"日";m=v.match(/^(\d{4})-(\d{2})$/);return m?m[1]+"年"+(+m[2])+"月":v}
-function calHtml(c,v){const y=c.y,m=c.m,cy=new Date().getFullYear(),ys=[];for(let i=cy+10;i>=1900;i--)ys.push(i);if(!ys.includes(y)){ys.push(y);ys.sort((a,b)=>b-a)}
+function calHtml(c,v){const y=c.y,m=c.m,cy=new Date().getFullYear(),ys=[];for(let i=1900;i<=cy+10;i++)ys.push(i);if(!ys.includes(y)){ys.push(y);ys.sort((a,b)=>a-b)}
 const ysel=`<select data-cal="y">${ys.map(i=>`<option value="${i}"${i===y?" selected":""}>${i} 年</option>`).join("")}</select>`;
 if(c.mo){const on=String(v).match(/^(\d{4})-(\d{2})/),cells=[1,2,3,4,5,6,7,8,9,10,11,12].map(i=>`<a data-act="calm" data-m="${i}" class="${on&&+on[1]===y&&+on[2]===i?"on":""}">${i}月</a>`).join("");
 return `<div class="cal"><div class="calh"><a data-act="calp">‹</a>${ysel}<a data-act="caln">›</a></div><div class="calg calg4">${cells}</div><div class="calf"><a data-act="calt">本月</a><a data-act="calx">关闭</a></div></div>`}
 const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate(),t=ld();let cells="";
 for(let i=0;i<first;i++)cells+="<i></i>";
 for(let k=1;k<=n;k++){const s=y+"-"+String(m).padStart(2,"0")+"-"+String(k).padStart(2,"0");cells+=`<a data-act="cald" data-d="${s}" class="${s===v?"on":s===t?"td":""}">${k}</a>`}
-return `<div class="cal"><div class="calh"><a data-act="calp">‹</a>${ysel}<select data-cal="m">${[1,2,3,4,5,6,7,8,9,10,11,12].map(i=>`<option value="${i}"${i===m?" selected":""}>${i} 月</option>`).join("")}</select><a data-act="caln">›</a></div><div class="calw">${"日一二三四五六".split("").map(x=>`<i>${x}</i>`).join("")}</div><div class="calg">${cells}</div><div class="calf"><a data-act="caly">只用年月</a><a data-act="calt">今天</a><a data-act="calx">关闭</a></div></div>`}
-document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||!t.dataset.cal)return;const r=cur();if(!r.cal)return;r.cal[t.dataset.cal]=+t.value;render()});
+return `<div class="cal"><div class="calh"><a data-act="calp">‹</a>${ysel}<select data-cal="m">${[1,2,3,4,5,6,7,8,9,10,11,12].map(i=>`<option value="${i}"${i===m?" selected":""}>${i} 月</option>`).join("")}</select><a data-act="caln">›</a></div><div class="calw">${"日一二三四五六".split("").map(x=>`<i>${x}</i>`).join("")}</div><div class="calg">${cells}</div><div class="calf"><a data-act="calt">今天</a><a data-act="calx">关闭</a></div><div class="mut" style="font-size:14px;text-align:center">只要年月：选好年、月后，点上方的日期框确定</div></div>`}
+document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||!t.dataset.cal)return;const r=cur();if(!r.cal)return;r.cal[t.dataset.cal]=+t.value;r.cal.t=1;render()});
 document.addEventListener("focusout",e=>{const t=e.target;if(!t.dataset||!t.dataset.money)return;const r=cur();if(!r.d)return;const v=m2(t.value);t.value=v;r.d[t.dataset.f]=v});
 document.addEventListener("click",e=>{if(!e.target.closest(".cmb"))document.querySelectorAll(".cmbl.on").forEach(x=>x.classList.remove("on"))});
 document.addEventListener("click",async e=>{
@@ -278,11 +278,10 @@ if(d.go){const n={p:d.go};if(d.id)n.id=+d.id;if(d.aid)n.aid=+d.aid;if(d.flt)n.f=
 if(t.classList.contains("chip")){if(d.k.startsWith("s_")){S[d.k.slice(2)]=d.v;saveS();return render()}if(d.k==="bf"){r.f=d.v;return render()}if(d.k==="bv"){r.v=d.v;return render()}if(r.d){r.d[d.k]=d.v;return render()}return}
 if(d.act==="cmb"){const l=t.parentNode.querySelector(".cmbl"),on=l.classList.contains("on");document.querySelectorAll(".cmbl.on").forEach(x=>x.classList.remove("on"));if(!on)l.classList.add("on");return}
 if(d.act==="cmbp"){r.d[d.k]=d.v;render();return}
-if(d.act==="cal"){const k=d.k;if(r.cal&&r.cal.k===k)r.cal=null;else{const m=String(r.d[k]||"").match(/^(\d{4})-(\d{2})/),n=new Date();r.cal={k,y:m?+m[1]:n.getFullYear(),m:m?+m[2]:n.getMonth()+1,mo:d.mo?1:0}}render();return}
-if(d.act==="calp"||d.act==="caln"){const c=r.cal;if(!c)return;if(c.mo)c.y+=d.act==="calp"?-1:1;else{c.m+=d.act==="calp"?-1:1;if(c.m<1){c.m=12;c.y--}if(c.m>12){c.m=1;c.y++}}render();return}
+if(d.act==="cal"){const k=d.k;if(r.cal&&r.cal.k===k){const c=r.cal;if(c.t&&!c.mo){const v=String(r.d[k]||""),ym=c.y+"-"+String(c.m).padStart(2,"0");if(!(/^\d{4}-\d{2}-\d{2}$/.test(v)&&v.slice(0,7)===ym))r.d[k]=ym}r.cal=null}else{const m=String(r.d[k]||"").match(/^(\d{4})-(\d{2})/),n=new Date();r.cal={k,y:m?+m[1]:n.getFullYear(),m:m?+m[2]:n.getMonth()+1,mo:d.mo?1:0}}render();return}
+if(d.act==="calp"||d.act==="caln"){const c=r.cal;if(!c)return;if(c.mo)c.y+=d.act==="calp"?-1:1;else{c.t=1;c.m+=d.act==="calp"?-1:1;if(c.m<1){c.m=12;c.y--}if(c.m>12){c.m=1;c.y++}}render();return}
 if(d.act==="cald"){r.d[r.cal.k]=d.d;r.cal=null;render();return}
 if(d.act==="calm"){r.d[r.cal.k]=r.cal.y+"-"+String(d.m).padStart(2,"0");r.cal=null;render();return}
-if(d.act==="caly"){r.d[r.cal.k]=r.cal.y+"-"+String(r.cal.m).padStart(2,"0");r.cal=null;render();return}
 if(d.act==="calt"){r.d[r.cal.k]=r.cal.mo?ld().slice(0,7):ld();r.cal=null;render();return}
 if(d.act==="calx"){r.cal=null;render();return}
 if(d.act==="addL"){await addItem(r,r.items[+d.i]);await load();const y=scrollY;render();scrollTo(0,y);toast("已加入书目");return}
